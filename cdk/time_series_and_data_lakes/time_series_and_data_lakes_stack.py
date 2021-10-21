@@ -24,7 +24,7 @@ class TimeSeriesAndDataLakesStack(core.Stack):
             shard_count=input_stream_shard_count
         )
 
-        # Input Stream - Amazon Kinesis Data Stream
+        # Complex Event Processing (CEP) Stream - Amazon Kinesis Data Stream
         cep_stream = kinesis.Stream(
             self,
             "CepStream",
@@ -49,7 +49,7 @@ class TimeSeriesAndDataLakesStack(core.Stack):
             }
         )
 
-        # Complex Event Processing (CEP) Time Series Table - Amazon Timestream Table
+        # CEP Time Series Table - Amazon Timestream Table
         ts_cep_table = timestream.CfnTable(
             self,
             "TimeSeriesCepTable",
@@ -79,7 +79,7 @@ class TimeSeriesAndDataLakesStack(core.Stack):
         )
 
         # S3 Bucket used by MWAA to export data
-        s3_bucket = s3.Bucket(self, "export")
+        data_lake_bucket = s3.Bucket(self, "data-lake")
 
         # IAM policy which we can attach to MWAA that provides
         # access to the Timestream database and tables and the
@@ -97,8 +97,8 @@ class TimeSeriesAndDataLakesStack(core.Stack):
                     ],
                     effect=iam.Effect.ALLOW,
                     resources=[
-                        f"{s3_bucket.bucket_arn}/*",
-                        f"{s3_bucket.bucket_arn}"
+                        f"{data_lake_bucket.bucket_arn}/*",
+                        f"{data_lake_bucket.bucket_arn}"
                     ],
                 ),
                 iam.PolicyStatement(
@@ -160,6 +160,13 @@ class TimeSeriesAndDataLakesStack(core.Stack):
             id="CepTimeSeriesTableName",
             value=ts_cep_table.attr_name,
             description="CEP Time Series Table Name"
+        )
+
+        core.CfnOutput(
+            self,
+            id="DataLakeBucket",
+            value=data_lake_bucket.bucket_name,
+            description="Data Lake Bucket Name"
         )
 
         core.CfnOutput(

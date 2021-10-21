@@ -64,11 +64,11 @@ MATCH_RECOGNIZE (
         MIN(temperature) as min_temperature,
         ROUND(AVG(temperature),2) as avg_temperature,
         MAX(temperature) as max_temperature,
-        ROUND((C.event_time - A.event_time) / 100, 2) as elapsed
+        ROUND((C.event_time - A.event_time) / 1000, 3) as elapsed
     AFTER MATCH SKIP PAST LAST ROW
     PATTERN (A B{1,5} C) WITHIN INTERVAL '10' MINUTES
     DEFINE
         A AS status = 'ERROR',
-        B AS status <> 'ERROR' AND B.sensor_id = A.sensor_id,
-        C AS status = 'ERROR' AND C.sensor_id = A.sensor_id
+        B AS status <> 'ERROR',
+        C AS status = 'ERROR'
 ) AS T
