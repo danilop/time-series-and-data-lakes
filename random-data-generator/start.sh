@@ -1,0 +1,1 @@
+nohup python3 random_data_generator.py &

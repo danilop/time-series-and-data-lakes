@@ -1,0 +1,74 @@
+%flink.ssql
+
+CREATE TABLE sensor_data (
+    `sensor_id` VARCHAR(9),
+    `temperature` DOUBLE,
+    `status` VARCHAR(7),
+    `event_time` BIGINT,
+    `ptime` AS PROCTIME()
+)
+PARTITIONED BY (sensor_id)
+WITH (
+    'connector' = 'kinesis',
+    'stream' = 'time-series-and-data-lakes-InputStreamCFB159EA-0n5H7fLrsT28',
+    'aws.region' = 'us-east-1',
+    'scan.stream.initpos' = 'LATEST',
+    'format' = 'json',
+    'json.timestamp-format.standard' = 'ISO-8601'
+);
+
+
+%flink.ssql
+
+CREATE TABLE cep_data (
+    `sensor_id` VARCHAR(9),
+    `event_time` BIGINT,
+    `non_errors` BIGINT,
+    `history` VARCHAR(40),
+    `min_temperature` DOUBLE,
+    `avg_temperature` DOUBLE,
+    `max_temperature` DOUBLE,
+    `elapsed` INTEGER
+)
+PARTITIONED BY (sensor_id)
+WITH (
+    'connector' = 'kinesis',
+    'stream' = 'time-series-and-data-lakes-CepStreamB47B8F43-7YC2KJ5RR9dS',
+    'aws.region' = 'us-east-1',
+    'scan.stream.initpos' = 'LATEST',
+    'format' = 'json',
+    'json.timestamp-format.standard' = 'ISO-8601',
+    'sink.producer.aggregation-enabled' = 'false'
+);
+
+
+%flink.ssql(type=update)
+
+SELECT * FROM sensor_data;
+
+
+%flink.ssql(type=update)
+
+SELECT *
+FROM `sensor_data`
+MATCH_RECOGNIZE (
+    PARTITION BY sensor_id
+    ORDER BY ptime
+    MEASURES
+        FIRST(B.status,0) as b1_status,
+        FIRST(B.status,1) as b2_status,
+        FIRST(B.status,2) as b3_status,
+        FIRST(B.status,3) as b4_status,
+        FIRST(B.status,4) as b5_status,
+        COUNT(*) AS total_rows,
+        MIN(temperature) as min_temperature,
+        ROUND(AVG(temperature),2) as avg_temperature,
+        MAX(temperature) as max_temperature,
+        ROUND((C.event_time - A.event_time) / 100, 2) as elapsed
+    AFTER MATCH SKIP PAST LAST ROW
+    PATTERN (A B{1,5} C) WITHIN INTERVAL '10' MINUTES
+    DEFINE
+        A AS status = 'ERROR',
+        B AS status <> 'ERROR' AND B.sensor_id = A.sensor_id,
+        C AS status = 'ERROR' AND C.sensor_id = A.sensor_id
+) AS T

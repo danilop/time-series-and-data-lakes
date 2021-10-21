@@ -1,0 +1,8 @@
+-e .
+pytest
+aws-cdk.aws_iam
+aws-cdk.aws_kinesis
+aws-cdk.aws-lambda
+aws-cdk.aws-lambda-event-sources
+aws-cdk.aws_s3
+aws-cdk.aws_timestream
