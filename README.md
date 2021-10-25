@@ -78,7 +78,11 @@ If you now go into the Amazon Timestream console, you will see data arriving in 
 
 Open up Amazon Kinesis Datastreams. Find the XXX data stream and select it. From the Process pull down menu, select "process data in real time". "Select Apache Flink – Studio notebook" and then give the notebook a name (kinesis-timestream) and then use the link to create a new database in AWS Glue (kinesis-flink-timestream). Select this database and then create your Studio Notebook.
 
-Once it has been created, make sure you click on the Edit IAM Permissions and select the Kinesis streams that were created for source and destination, and then SAVE. You can now Run (this might take a few minutes) and then open your notebook in Zeppelin.
+Once it has been created, make sure you click on the Edit IAM Permissions and select the Kinesis streams that were created for source and destination, and then SAVE. 
+
+Scroll down and now under AWS Support connectors you add the flink-sql-connector-kinesis, aws-msk-iam-auth and flink-connector-kafka (as of writing this, the version being used was 2_12).
+
+You can now Run (this might take a few minutes) and then open your notebook in Zeppelin.
 
 In Zeppelin, create a new note and use the contents of the kinesis-studio-notebook folder to run queries. You will need to change the stream information for the output that was created when you ran the cdk deploy application. Using the example above, this would be:
 
@@ -102,7 +106,6 @@ WITH (
     'json.timestamp-format.standard' = 'ISO-8601'
 );
 ```
-
 Once you have completed the notebook and the queries have all been saved, you can exit.
 
 
