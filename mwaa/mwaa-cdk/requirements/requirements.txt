@@ -1,0 +1,3 @@
+cython==0.29.21
+pyarrow==2.0.0
+awswrangler==2.4.0
