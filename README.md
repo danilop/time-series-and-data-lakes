@@ -46,6 +46,16 @@ time-series-and-data-lakes.TimeSeriesDatabaseName = TimeSeriesDb-HYRCSa6VcVaH
 ```
 We will use the information in these outputs in a bit.
 
+We are going to reference the TimeSeries database and tables later on, so we are going to store these in AWS Secrets Manager as follows, using the aws cli:
+
+```
+aws secretsmanager create-secret --name airflow/variables/timeseriesdb --description "TS DB" --secret-string "TimeSeriesDb-HYRCSa6VcVaH" 
+aws secretsmanager create-secret --name airflow/variables/timeseriesrawtbl --description "TS Raw Table" --secret-string "TimeSeriesRawTable-oFmx41zmBQz4"         
+aws secretsmanager create-secret --name airflow/variables/timeseriesceptbl --description "TS CEP Table" --secret-string "TimeSeriesCepTable-Ikv45CI0g1Iq" 
+```
+
+
+
 > Note! Whilst this is running, you can check progress and see the resources being installed by checking the Cloudformation stack that is in progress.
 
 You have now installed the following components:
@@ -249,8 +259,37 @@ You can now open the Apache Airflow UI by accessing the Web URL. To get this, yo
 ```
 aws mwaa get-environment --name airflow-timestream-datalake  | jq -r '.Environment | .WebserverUrl'
 ```
-And this will provide you with your url you can put in the browser.
+And this will provide you with your url you can put in the browser, which will take you to the Apache Airflow UI.
 
 **Step 8**
+
+The DAG called "timestream-airflow-demo.py" will appear in the Apache Airflow UI, but will be paused and so will not be running.
+
+Once enabled (un-paused) it will (for the purposes of being able to easily demo) run every 5 minutes, running one of the queries from Part 1, and storing that in csv file in the data lake we defined in Amazon S3. The folder structure is created to help partition the data, and is based on the date/time stamp of when the query was run.
+
+> The DAG has been configured to not do catchup (catchup=False) which means you will not create large numbers of tasks due to the schedule being every 5 mins.
+
+You can look at the DAG script and see how this works
+You can view the folders/files being created in the data lake S3 bucket
+You can view the logs for the tasks as they run, both in the Apache Airflow and CloudWatch
+
+**Step 9**
+
+Unpause the DAG called "timestream-airflow-glue-adhoc.py" and then run this manually once. When you run this the first time, this will cause the task to fail (this is a known issue with the operator with this version of MWAA, and is fixed - we just cannot apply this fixed operator to this version of Apache Airflow).
+
+If you go to the AWS Glue console, you will now see that there is a new database that has been created.
+
+Unpause the DAG called "timestream-airflow-glue.py" and this will kick off the crawler again (every 5 mins) post update. When you look at the AWS Glue console, you will now see the tables.
+
+<Add Partition updates here>
+ 
+If we now go to the Amazon Athena console, we can see that we see our Timestream data available within our data lake.
+ 
+ 
+### Part 3 - Visualsation and analysing the timestream data in the Data Lake 
+
+ <Javier to add>
+
+
 
 
