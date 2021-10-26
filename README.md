@@ -178,11 +178,79 @@ We are going to use Apache Airflow to orchestrate the running of this script, so
 
 **Step 7**
 
-We will deploy Apache Airflow using CDK
+We will deploy Apache Airflow using CDK. You will be creating a new VPC, so make sure you have capacity within the region you are deploying before proceeding (by default, the soft limit is 5 VPCs per region)
 
 
+```
+cd mwaa/mwaa-cdk
+cdk deploy timestream-MWAA-vpc
+```
+If successful, you will create the required VPC and you will see output similar to the following (may take 5-10 minutes).
 
+```
+ ✅  timestream-MWAA-vpc
 
+Outputs:
+timestream-MWAA-vpc.ExportsOutputReftimestreamMWAAApacheAirflowVPC8F1A4AAE969F6886 = vpc-082e01fa3d88544df
+timestream-MWAA-vpc.ExportsOutputReftimestreamMWAAApacheAirflowVPCprivateSubnet1SubnetD80E882B021683F9 = subnet-000fc9d76fc57ae8b
+timestream-MWAA-vpc.ExportsOutputReftimestreamMWAAApacheAirflowVPCprivateSubnet2Subnet4D776BC5BB3BCAA4 = subnet-0a6da1ee21cb2f00e
+timestream-MWAA-vpc.VPCId = vpc-082e01fa3d88544df
 
+Stack ARN:
+arn:aws:cloudformation:eu-west-1:704533066374:stack/timestream-MWAA-vpc/f9901a50-365a-11ec-808e-06236a8fff2f
+```
+
+You will now need to edit the app.py file which contains some parameters that control how the Apache Airflow will be created. You will need to alter the following lines:
+
+```
+env_EU=core.Environment(region="eu-west-1", account="xxxxxxx")
+mwaa_props = {
+    'dagss3location': 'airflow-timestream-datalake-demo',
+    'mwaa_env' : 'airflow-timestream-datalake',
+    'mwaa_secrets' : 'airflow/variables', 
+    'mwaa_ts_iam_arn' : 'arn:aws:iam::704533066374:policy/time-series-and-data-lakes-MWAAPolicyCBFB7F6C-1M1XY2GN81694',
+    'datalake_bucket' : 'time-series-and-data-lakes-datalake9060eab7-1qga4qb5ly9vn'
+    }
+```
+
+Update this to reflect your own AWS account as well as the output from the Timestream CDK deployment (which created the mwaa_ts_iam_arn and datalake_bucket values). You should change the dagss3location to be a unique S3 bucket - the CDK deployment will fail if you do not change this as this has already been created when this demo was put together. 
+
+You can now deploy the MWAA environment using the following command:
+
+First deploy the files
+```
+cdk deploy timestream-MWAA-deploy
+```
+Answer Y when prompted, and this will create and upload the Apache Airflow files, you can now deploy the environment running
+
+```
+cdk deploy timestream-MWAA-env
+```
+Answer Y when prompted. If you are successful, you should see something like:
+
+```
+(NOTE: There may be security-related changes not in this list. See https://github.com/aws/aws-cdk/issues/1299)
+
+Do you wish to deploy these changes (y/n)? y
+timestream-MWAA-env: deploying...
+timestream-MWAA-env: creating CloudFormation changeset...
+
+ ✅  timestream-MWAA-env
+
+Outputs:
+timestream-MWAA-env.MWAASecurityGroup = sg-0104a570bd980800b
+
+Stack ARN:
+arn:aws:cloudformation:eu-west-1:704533066374:stack/timestream-MWAA-env/bf1558c0-367a-11ec-8ad1-024f3dd2760b
+```
+
+You can now open the Apache Airflow UI by accessing the Web URL. To get this, you can either go to the MWAA console, or run this command which will give you the url (this is based on the environment called "airflow-timestream-datalake" which I set in the app.py above)
+
+```
+aws mwaa get-environment --name airflow-timestream-datalake  | jq -r '.Environment | .WebserverUrl'
+```
+And this will provide you with your url you can put in the browser.
+
+**Step 8**
 
 
