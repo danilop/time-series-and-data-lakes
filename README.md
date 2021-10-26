@@ -123,11 +123,11 @@ time-series-and-data-lakes.TimeSeriesDatabaseName = TimeSeriesDb-HYRCSa6VcVaH
 When I run the first query, I see output like the following:
 
 ```
-|sensor_id | time                         |status    temperature |
-|sensor-12	|2021-10-26 09:20:20.922000000	|OK	     |61.0 |
-|sensor-12	|2021-10-26 09:20:21.922000000	|OK	     |65.12938747419133|
-|sensor-12	|2021-10-26 09:20:22.922000000	|OK	     |69.25877494838265|
-|sensor-12	|2021-10-26 09:20:23.922000000	|OK	     |74.02579365079364|
+|| sensor_id  || time                      || status || temperature ||
+| sensor-12	| 2021-10-26 09:20:20.922000000	| OK	     | 61.0 |
+| sensor-12	| 2021-10-26 09:20:21.922000000	| OK	     | 65.12938747419133 |
+| sensor-12	| 2021-10-26 09:20:22.922000000	| OK	     | 69.25877494838265 |
+| sensor-12	| 2021-10-26 09:20:23.922000000	| OK	     | 74.02579365079364 |
 ...
 ```
 
@@ -135,6 +135,50 @@ You can repeat the other queries to complete the first part of this demo.
 
 #### Part 2 - Data Lake orchestration
 
+**Step 6**
+
+We have a script that we have created that allows us to use some of the Timestream query capabilities, and then generate output using an open source project called AWS Data Wrangler. This project makes is easy to work with data services on AWS.
+
+The script is in the mwaa folder, and called airflow-query.py.
+
+We need to modify this script and update it with our Timestream database and table, review and adjust if needed the other info in the script (you can keep these default if you do not want to change) and we can run it by
+
+```
+python airflow-query.py
+```
+
+Which should generate output like the following:
+
+```
+0      sensor-12 2021-10-26 11:36:35.099     OK    28.000000
+1      sensor-12 2021-10-26 11:36:36.099     OK    30.545339
+2      sensor-12 2021-10-26 11:36:37.099     OK    33.090678
+3      sensor-12 2021-10-26 11:36:38.099     OK    35.636017
+4      sensor-12 2021-10-26 11:36:39.099     OK    36.341655
+...          ...                     ...    ...          ...
+29154  sensor-88 2021-10-26 11:38:49.961     OK    11.126397
+29155  sensor-88 2021-10-26 11:38:50.961     OK    14.794466
+29156  sensor-88 2021-10-26 11:38:51.961     OK    18.747036
+29157  sensor-88 2021-10-26 11:38:52.961     OK    22.699605
+29158  sensor-88 2021-10-26 11:38:53.961     OK    26.652174
+
+[29159 rows x 4 columns]
+Timestream query processed successfully and copied to 2021102612
+```
+(You can ignore the copied to statement - the script does not copy this data, and this is just for reference)
+
+The script could be used to write data to our data lake (the Amazon S3 bucket we created in Part One) by changing the "q = wr.timestream.query(query1)" statement to the following:
+
+```
+wr.s3.to_csv(df=wr.timestream.query(query1), path='s3://{our-data-lake-s3folder}/my_file.csv'.
+```
+In this example we are writing a csv file, but we could use any of the supported data formats (parquet for example).
+
+We are going to use Apache Airflow to orchestrate the running of this script, so that we can export this query into our data lake. For the purpose of the demo, we will schedule this every 5 minutes, just so we can see it in operation. We will use Amazon Managed Workflows for Apache Airflow (MWAA), a managed version of Apache Airflow.
+
+**Step 7**
+
+We will deploy Apache Airflow using CDK
 
 
 
