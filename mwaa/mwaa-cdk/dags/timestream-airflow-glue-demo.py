@@ -32,8 +32,8 @@ default_args = {
 
 tsdb =  Variable.get("timeseriesdb", default_var="undefined")
 tstbl = Variable.get("timeseriesrawtbl", default_var="undefined")
-
-
+glueiam = Variable.get("gluecrawlerrole", default_var="undefined")
+datalake = Variable.get("datalake", default_var="undefined")
 
 def ts_query(**kwargs):
     # get time window for query - uses the delta of the previous and this window
@@ -57,7 +57,7 @@ def ts_query(**kwargs):
                         CREATE_TIME_SERIES(time, status),
                         SEQUENCE(min(time), max(time), 1s)) AS locf_status
                     FROM "{db}"."{tbl}"
-                WHERE measure_name = 'temperature' AND time BETWEEN '{end}' AND '{finish}'
+                WHERE measure_name = 'temperature' AND time BETWEEN '{start}' AND '{finish}'
                 GROUP BY sensor_id
                 )
                 SELECT int.sensor_id, t.time, min(s.status) AS status, avg(t.temp) AS temperature
@@ -101,10 +101,10 @@ with DAG(
         aws_conn_id='aws_default',
         config={
             'Name':'airflow-timestream-crawler',
-            'Role':'service-role/timestream-MWAA-env-mwaagluetimestreamserviceroleA-10LH3T56HR62T',
+            'Role':'service-role/{iamrole}'.format(iamrole=glueiam),
             'DatabaseName' : 'reinvent-airflow-timeseries-datalake',
             'Description': 'Crawler for TimeSeries data',
-            'Targets':{'S3Targets' : [{'Path': 's3://time-series-and-data-lakes-datalake9060eab7-1qga4qb5ly9vn', 'Exclusions': [ 'demo-airflow-flink/**', 'files/**'] }]}}
+            'Targets':{'S3Targets' : [{'Path': 's3://{datalake}'.format(datalake=datalake), 'Exclusions': [ 'demo-airflow-flink/**', 'files/**'] }]}}
             )
 
     ts_query=PythonOperator(task_id='ts_query', python_callable=ts_query, dag=dag)

@@ -163,13 +163,21 @@ class MwaaCdkStackEnv(core.Stack):
             path="/service-role/"
         )
 
+        # Add permissions to AWS Glue Crawler
+
+        mwaa_service_role.add_managed_policy(managed_glue_policy)
+
         # Add permissions to TimeStream to 1/access datalake, 2/access to query TS data
 
-        mwaa_service_role.from_role_arn(
-            self,
-            "timestream-permissions-from-other-stack",
-            f"{mwaa_props['mwaa_ts_iam_arn']}"
-        )
+        mwaa_service_role.add_managed_policy(iam.ManagedPolicy.from_managed_policy_arn(self, "timestream-permissions-for-mwaa",f"{mwaa_props['mwaa_ts_iam_arn']}"))
+
+
+        # We need to CREATE a new AWS Glue Managed Service role
+
+        mwaa_glue_service_role_arn = mwaa_glue_service_role.role_arn
+        managed_glue_policy = iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AWSGlueServiceRole")
+        mwaa_glue_service_role.add_managed_policy(managed_glue_policy)
+
 
         # Create MWAA Security Group and get networking info
 
@@ -231,7 +239,16 @@ class MwaaCdkStackEnv(core.Stack):
                         ),
                     ]
         )
-        mwaa_service_role.attach_inline_policy(mwaa_secrets_policy_document)
+    
+        # Attach the Managed policy - if you do not do this MWAA generates 503/504 Gateway Errors
+        # and then attach access to specifc secrets - we do not want to give broad access
+
+        mwaa_sm = iam.ManagedPolicy.from_aws_managed_policy_name("SecretsManagerReadWrite")
+        mwaa_sm_arn = mwaa_sm.managed_policy_arn
+        mwaa_service_role.add_managed_policy(iam.ManagedPolicy.from_managed_policy_arn(self, "secrets-manager-permissions",mwaa_sm_arn))
+
+
+
 
         tags = {
             'env': f"{mwaa_props['mwaa_env']}",
@@ -272,6 +289,13 @@ class MwaaCdkStackEnv(core.Stack):
             value=security_group_id,
             description="VPC ID for MWAA"
         )
+        core.CfnOutput(
+            self,
+            id="GlueIAMRole",
+            value=mwaa_glue_service_role.role_name,
+            description="IAM Role for AWS Glue Crawler"
+        )
+
 
 
     
