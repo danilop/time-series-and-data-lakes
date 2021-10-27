@@ -248,17 +248,17 @@ timestream-MWAA-env: creating CloudFormation changeset...
  ✅  timestream-MWAA-env
 
 Outputs:
-timestream-MWAA-env.GlueIAMRole = timestream-MWAA-env-mwaagluetimestreamserviceroleA-NIXGV5QVSXNF
+timestream-MWAA-env.GlueIAMRole = timestream-MWAA-env-mwaagluetimestreamserviceroleA-843SPL9XF745
 timestream-MWAA-env.MWAASecurityGroup = sg-0104a570bd980800b
 
 Stack ARN:
 arn:aws:cloudformation:eu-west-1:704533066374:stack/timestream-MWAA-env/bf1558c0-367a-11ec-8ad1-024f3dd2760b
 ```
 
-You will now need to add one more value into AWS Secrets Manager, which we will use in the DAGS. This is to enable the the right level of access for AWS Glue. We have created a new IAM role, which you can see in the output as the value of timestream-MWAA-env.GlueIAMRole (in the example above, this is timestream-MWAA-env-mwaagluetimestreamserviceroleA-NIXGV5QVSXNF)
+You will now need to add one more value into AWS Secrets Manager, which we will use in the DAGS. This is to enable the the right level of access for AWS Glue. We have created a new IAM role, which you can see in the output as the value of timestream-MWAA-env.GlueIAMRole (in the example above, this is timestream-MWAA-env-mwaagluetimestreamserviceroleA-843SPL9XF745)
 
 ```
-aws secretsmanager create-secret --name airflow/variables/gluecrawlerrole --description "AWS Glue Crawler IAM Role" --secret-string "timestream-MWAA-env-mwaagluetimestreamserviceroleA-NIXGV5QVSXNF" 
+aws secretsmanager create-secret --name airflow/variables/gluecrawlerrole --description "AWS Glue Crawler IAM Role" --secret-string "timestream-MWAA-env-mwaagluetimestreamserviceroleA-843SPL9XF745" 
 ```
 
 You can now open the Apache Airflow UI by accessing the Web URL. To get this, you can either go to the MWAA console, or run this command which will give you the url (this is based on the environment called "airflow-timestream-datalake" which I set in the app.py above)
