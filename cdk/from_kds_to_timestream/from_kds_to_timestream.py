@@ -18,7 +18,7 @@ class FromKdsToTimestream(core.Construct):
         # Load all records in the Input Stream into the Raw Time Series Table - AWS Lambda Function
         load_data_fn = lambda_.Function(
             self, "LoadRawDataFn",
-            runtime=lambda_.Runtime.PYTHON_3_9,
+            runtime=lambda_.Runtime.PYTHON_3_8,
             code=lambda_.Code.from_asset("load_data_fn"),
             handler="app.lambda_handler",
             environment={
