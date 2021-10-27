@@ -57,7 +57,7 @@ def ts_query(**kwargs):
                         CREATE_TIME_SERIES(time, status),
                         SEQUENCE(min(time), max(time), 1s)) AS locf_status
                     FROM "{db}"."{tbl}"
-                WHERE measure_name = 'temperature' AND time BETWEEN '{start}' AND '{finish}'
+                WHERE measure_name = 'temperature' AND time BETWEEN '{finish}' AND '{start}'
                 GROUP BY sensor_id
                 )
                 SELECT int.sensor_id, t.time, min(s.status) AS status, avg(t.temp) AS temperature
@@ -71,8 +71,8 @@ def ts_query(**kwargs):
 
     print("Query to be run: {query}".format(query=query))
     try:
-        wr.s3.to_csv(df=wr.timestream.query(query), path='s3://demo-airflow-ts-output/{s3folder}/my_file.csv'.format(s3folder=s3folder,))
-        print ("Timestream query processed successfully and copied to {s3folder}".format(s3folder=s3folder))
+        wr.s3.to_csv(df=wr.timestream.query(query), path='s3://{datalake}/{s3folder}/my_file.csv'.format(s3folder=s3folder,datalake=datalake))
+        print ("Timestream query processed successfully and copied to {datalake} / {s3folder}".format(s3folder=s3folder,datalake=datalake))
     except ValueError:
         print("Query returned no values - no data uploaded")
     except wr.exceptions.EmptyDataFrame:
