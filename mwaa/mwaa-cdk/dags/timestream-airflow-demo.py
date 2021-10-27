@@ -52,7 +52,7 @@ def ts_query(**kwargs):
                         CREATE_TIME_SERIES(time, status),
                         SEQUENCE(min(time), max(time), 1s)) AS locf_status
                     FROM "{db}"."{tbl}"
-                WHERE measure_name = 'temperature' AND time BETWEEN '{finish}' AND '{start}'
+                WHERE measure_name = 'temperature' AND time BETWEEN '{start}' AND '{finish}'
                 GROUP BY sensor_id
                 )
                 SELECT int.sensor_id, t.time, min(s.status) AS status, avg(t.temp) AS temperature
