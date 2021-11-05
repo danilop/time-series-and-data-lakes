@@ -1,5 +1,4 @@
 %flink.ssql
-
 CREATE TABLE sensor_data (
     `sensor_id` VARCHAR(9),
     `temperature` DOUBLE,
@@ -19,7 +18,6 @@ WITH (
 
 
 %flink.ssql
-
 CREATE TABLE cep_data (
     `sensor_id` VARCHAR(9),
     `event_time` BIGINT,
@@ -43,32 +41,29 @@ WITH (
 
 
 %flink.ssql(type=update)
-
 SELECT * FROM sensor_data;
 
 
 %flink.ssql(type=update)
-
+INSERT INTO cep_data
 SELECT *
 FROM `sensor_data`
 MATCH_RECOGNIZE (
     PARTITION BY sensor_id
     ORDER BY ptime
     MEASURES
-        FIRST(B.status,0) as b1_status,
-        FIRST(B.status,1) as b2_status,
-        FIRST(B.status,2) as b3_status,
-        FIRST(B.status,3) as b4_status,
-        FIRST(B.status,4) as b5_status,
-        COUNT(*) AS total_rows,
+        A.event_time as event_time,
+        COUNT(*) - 2 AS non_errors,
+        CONCAT_WS('-', FIRST(B.status,0), FIRST(B.status,1), FIRST(B.status,2),
+            FIRST(B.status,3), FIRST(B.status,4)) as history,
         MIN(temperature) as min_temperature,
         ROUND(AVG(temperature),2) as avg_temperature,
         MAX(temperature) as max_temperature,
-        ROUND((C.event_time - A.event_time) / 1000, 3) as elapsed
+        ROUND((C.event_time - A.event_time) / 1000) as elapsed
     AFTER MATCH SKIP PAST LAST ROW
     PATTERN (A B{1,5} C) WITHIN INTERVAL '10' MINUTES
     DEFINE
         A AS status = 'ERROR',
-        B AS status <> 'ERROR',
-        C AS status = 'ERROR'
+        B AS status <> 'ERROR', -- AND B.sensor_id = A.sensor_id,
+        C AS status = 'ERROR' -- AND C.sensor_id = A.sensor_id
 ) AS T
