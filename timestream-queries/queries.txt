@@ -34,8 +34,8 @@ GROUP BY sensor_id
 
 -- Some values in the time series are missing
 SELECT sensor_id,
-        CREATE_TIME_SERIES(time, measure_value::double),
-        CREATE_TIME_SERIES(time, status)
-FROM "TimeSeriesDb-Tc4D7m7fPQQd"."TimeSeriesRawTable-9vgA4lStVsUx"
-WHERE measure_name = 'temperature' AND time >= ago(15m)
-GROUP BY sensor_id
+        CREATE_TIME_SERIES(time, measure_value::double) as temperature_ts,
+        CREATE_TIME_SERIES(time, status) as status_ts
+  FROM "TimeSeriesDb-Tc4D7m7fPQQd"."TimeSeriesRawTable-9vgA4lStVsUx"
+  WHERE measure_name = 'temperature' AND time >= ago(1m)
+  GROUP BY sensor_id
