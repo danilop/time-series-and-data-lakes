@@ -19,12 +19,12 @@ setuptools.setup(
     packages=setuptools.find_packages(where="time_series_and_data_lakes"),
 
     install_requires=[
-        "aws-cdk.core==1.127.0",
-        "aws-cdk.aws_iam==1.127.0",
-        "aws-cdk.aws_sqs==1.127.0",
-        "aws-cdk.aws_sns==1.127.0",
-        "aws-cdk.aws_sns_subscriptions==1.127.0",
-        "aws-cdk.aws_s3==1.127.0",
+        "aws-cdk.core==1.134.0",
+        "aws-cdk.aws_iam==1.134.0",
+        "aws-cdk.aws_sqs==1.134.0",
+        "aws-cdk.aws_sns==1.134.0",
+        "aws-cdk.aws_sns_subscriptions==1.134.0",
+        "aws-cdk.aws_s3==1.134.0",
     ],
 
     python_requires=">=3.6",
