@@ -4,7 +4,7 @@ Make sure you are running the latest version of CDK before you start.
 
 ```
 cdk --version
-1.129.0
+1.134.0
 ```
 
 ## Getting the demo up and running
