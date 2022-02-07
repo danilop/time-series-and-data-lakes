@@ -49,9 +49,9 @@ We will use the information in these outputs in a bit.
 We are going to reference the TimeSeries database and tables later on, so we are going to store these in AWS Secrets Manager as follows, using the aws cli:
 
 ```
-aws secretsmanager create-secret --name airflow/variables/timeseriesdb --description "TS DB" --secret-string "TimeSeriesDb-HYRCSa6VcVaH" 
+aws secretsmanager create-secret --name airflow/variables/timeseriesdb --description "TS DB" --secret-string "TimeSeriesDb-HYRCSa6VcVaH"
 aws secretsmanager create-secret --name airflow/variables/timeseriesrawtbl --description "TS Raw Table" --secret-string "TimeSeriesRawTable-oFmx41zmBQz4"         
-aws secretsmanager create-secret --name airflow/variables/datalake --description "S3 Datalake bucket" --secret-string "time-series-and-data-lakes-datalake9060eab7-1qga4qb5ly9vn" 
+aws secretsmanager create-secret --name airflow/variables/datalake --description "S3 Datalake bucket" --secret-string "time-series-and-data-lakes-datalake9060eab7-1qga4qb5ly9vn"
 ```
 
 
@@ -90,7 +90,7 @@ If you now go into the Amazon Timestream console, you will see data arriving in 
 
 Open up Amazon Kinesis Datastreams. Find the input stream (in my example above, this is time-series-and-data-lakes-InputStreamCFB159EA-NBQ4g7W0AL2L) and select it. From the Process pull down menu, select "process data in real time". "Select Apache Flink – Studio notebook" and then give the notebook a name (kinesis-timestream) and then use the link to create a new database in AWS Glue (kinesis-flink-timestream). Select this database and then create your Studio Notebook.
 
-Once it has been created, make sure you click on the Edit IAM Permissions and select the "Included destinations in IAM policy" the and add the CEP Kinesis data stream that were created (in my example above, this is time-series-and-data-lakes-CepStreamB47B8F43-0wKXAnI3LAmb), and then SAVE. 
+Once it has been created, make sure you click on the Edit IAM Permissions and select the "Included destinations in IAM policy" the and add the CEP Kinesis data stream that were created (in my example above, this is time-series-and-data-lakes-CepStreamB47B8F43-0wKXAnI3LAmb), and then SAVE.
 
 Scroll down and now under AWS Support connectors you add the flink-sql-connector-kinesis, aws-msk-iam-auth and flink-connector-kafka (as of writing this, the version being used was 2_12).
 
@@ -124,7 +124,7 @@ You should see the two tables updating as you run the load generator. If you do,
 
 We can now try out the Amazon Timestream queries within the query editor. You will find these in the timestream-queries folder within the queries.txt file.
 
-You will need to update the query with the tables were created during your installation. In the example above, my database and tables are 
+You will need to update the query with the tables were created during your installation. In the example above, my database and tables are
 ```
 time-series-and-data-lakes.RawTimeSeriesTableName = TimeSeriesRawTable-oFmx41zmBQz4
 time-series-and-data-lakes.TimeSeriesDatabaseName = TimeSeriesDb-HYRCSa6VcVaH
@@ -217,13 +217,13 @@ env_EU=core.Environment(region="eu-west-1", account="xxxxxxx")
 mwaa_props = {
     'dagss3location': 'airflow-timestream-datalake-demo',
     'mwaa_env' : 'airflow-timestream-datalake',
-    'mwaa_secrets' : 'airflow/variables', 
+    'mwaa_secrets' : 'airflow/variables',
     'mwaa_ts_iam_arn' : 'arn:aws:iam::704533066374:policy/time-series-and-data-lakes-MWAAPolicyCBFB7F6C-1M1XY2GN81694',
     'datalake_bucket' : 'time-series-and-data-lakes-datalake9060eab7-1qga4qb5ly9vn'
     }
 ```
 
-Update this to reflect your own AWS account as well as the output from the Timestream CDK deployment (which created the mwaa_ts_iam_arn and datalake_bucket values). You should change the dagss3location to be a unique S3 bucket - the CDK deployment will fail if you do not change this as this has already been created when this demo was put together. 
+Update this to reflect your own AWS account as well as the output from the Timestream CDK deployment (which created the mwaa_ts_iam_arn and datalake_bucket values). You should change the dagss3location to be a unique S3 bucket - the CDK deployment will fail if you do not change this as this has already been created when this demo was put together.
 
 You can now deploy the MWAA environment using the following command:
 
@@ -258,7 +258,7 @@ arn:aws:cloudformation:eu-west-1:704533066374:stack/timestream-MWAA-env/bf1558c0
 You will now need to add one more value into AWS Secrets Manager, which we will use in the DAGS. This is to enable the the right level of access for AWS Glue. We have created a new IAM role, which you can see in the output as the value of timestream-MWAA-env.GlueIAMRole (in the example above, this is timestream-MWAA-env-mwaagluetimestreamserviceroleA-843SPL9XF745)
 
 ```
-aws secretsmanager create-secret --name airflow/variables/gluecrawlerrole --description "AWS Glue Crawler IAM Role" --secret-string "timestream-MWAA-env-mwaagluetimestreamserviceroleA-843SPL9XF745" 
+aws secretsmanager create-secret --name airflow/variables/gluecrawlerrole --description "AWS Glue Crawler IAM Role" --secret-string "timestream-MWAA-env-mwaagluetimestreamserviceroleA-843SPL9XF745"
 ```
 
 You can now open the Apache Airflow UI by accessing the Web URL. To get this, you can either go to the MWAA console, or run this command which will give you the url (this is based on the environment called "airflow-timestream-datalake" which I set in the app.py above)
@@ -289,14 +289,118 @@ If you go to the AWS Glue console, you will now see that there is a new database
 Unpause the DAG called "timestream-airflow-glue.py" and this will kick off the crawler again (every 5 mins) post update. When you look at the AWS Glue console, you will now see the tables.
 
 <Add Partition updates here>
- 
+
 If we now go to the Amazon Athena console, we can see that we see our Timestream data available within our data lake.
- 
- 
-### Part 3 - Visualsation and analysing the timestream data in the Data Lake 
-
- <Javier to add>
 
 
+### Part 3 - Visualisation and analysing the timestream data in the Data Lake
+
+We are now going to join the data processed by MWAA on the previous step with some (synthetic) data on our data lake. In the `data-lake` folder of this repository we have two subfolders with CSV files containing simulated customer master data and a mapping between sensors and customers. Since we were generating sensor data in our stream, we will now join the table to see how you could augment the time series data with the master data on your data lake.
+
+First you need to create a new bucket where we are going to store the synthetic customer data. DO NOT REUSE the same bucket we are using for the data lake.
+
+After creating the bucket, use either the aws-cli or the AWS console to upload the files customer_data.csv and sensor_mapping.csv. It is important the subfolder structure is kept, otherwise you will get errors when trying to query the data in Athena. This is the file structure you should have:
+
+ - your bucket root (or a subfolder)
+      - customer_data
+         - customer_data.csv
+      - sensor_mapping
+         - sensor_mapping.csv   
+
+Go to the Athena console and select the database we were using in the previous step (reinvent-airflow-timeseries-datalake) and run the following query modifying first the bucket location to point to your S3 bucket. This will register a table in your data lake pointing to the customer data.
+
+```
+CREATE EXTERNAL TABLE `customer_data`(
+  `customer_id` string COMMENT 'from deserializer',
+  `company_name` string COMMENT 'from deserializer',
+  `contact_person` string COMMENT 'from deserializer',
+  `contract_type` string COMMENT 'from deserializer')
+ROW FORMAT SERDE
+  'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+WITH SERDEPROPERTIES (
+  'separatorChar'=',')
+STORED AS INPUTFORMAT
+  'org.apache.hadoop.mapred.TextInputFormat'
+OUTPUTFORMAT
+  'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION
+  's3://YOUR_BUCKET_NAME_HERE/customer_data/'
+TBLPROPERTIES (
+  'classification'='csv',
+  'lakeformation.aso.status'='false',
+  'skip.header.line.count'='1')
+```
+
+If you want, you can run a query to see we have data there
+```
+SELECT * FROM "reinvent-airflow-timeseries-datalake"."customer_data" limit 10;
+```
 
 
+And now for the second table
+
+```
+CREATE EXTERNAL TABLE `sensor_mapping`(
+  `sensor_id` string COMMENT 'from deserializer',
+  `customer_id` string COMMENT 'from deserializer')
+ROW FORMAT SERDE
+  'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+WITH SERDEPROPERTIES (
+  'separatorChar'=',')
+STORED AS INPUTFORMAT
+  'org.apache.hadoop.mapred.TextInputFormat'
+OUTPUTFORMAT
+  'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION
+  's3://YOUR_BUCKET_NAME_HERE/sensor_mapping/'
+TBLPROPERTIES (
+  'classification'='csv',
+  'lakeformation.aso.status'='false',
+  'skip.header.line.count'='1')
+  ```
+
+We can now join data across both tables and the data coming from the sensors. If you run the query below (replacing the time_series_table_suffix to match your table) you will see we can query all the data together
+
+```
+SELECT
+  sensor_id
+, CAST(col2 AS timestamp) event_time
+, col3 status
+, CAST(col4 AS double) temperature
+, company_name
+, contact_person
+, contract_type
+FROM
+  (("reinvent-airflow-timeseries-datalake"."time_series_and_data_lakes_datalakeREPLACE_WITH_YOUR_SUFFIX" ts
+INNER JOIN "reinvent-airflow-timeseries-datalake"."sensor_mapping" mp ON (ts.col1 = mp.sensor_id))
+INNER JOIN "reinvent-airflow-timeseries-datalake"."customer_data" cd USING (customer_id))
+WHERE ("substr"(col2, 1, 1) = '2')
+LIMIT 10
+```
+
+To make things easier, we could create a view using the same query as before (remember to change the suffix) as in
+
+```
+CREATE OR REPLACE VIEW sensor_enriched_data AS
+SELECT
+  sensor_id
+, CAST(col2 AS timestamp) event_time
+, col3 status
+, CAST(col4 AS double) temperature
+, company_name
+, contact_person
+, contract_type
+FROM
+  (("reinvent-airflow-timeseries-datalake"."time_series_and_data_lakes_datalakeREPLACE_WITH_YOUR_SUFFIX" ts
+INNER JOIN "reinvent-airflow-timeseries-datalake"."sensor_mapping" mp ON (ts.col1 = mp.sensor_id))
+INNER JOIN "reinvent-airflow-timeseries-datalake"."customer_data" cd USING (customer_id))
+WHERE ("substr"(col2, 1, 1) = '2')
+```  
+
+And now we can directly query this view to have a consolidated view of our data across the data lake and the data exported from Timestream
+
+```
+select * from sensor_enriched_data limit 10
+```
+
+With this, if you wanted to create a business dashboard, you could just go to Amazon QuickSight, and create a dataset pointing to this Athena view.
