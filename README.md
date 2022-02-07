@@ -295,6 +295,43 @@ If we now go to the Amazon Athena console, we can see that we see our Timestream
 
 ### Part 3 - Visualisation and analysing the timestream data in the Data Lake
 
+#### 3.1 Real-time visualisation with Amazon Managed Grafana
+
+_Note: If you decide to skip this visualisation section, you can still proceed to the next section as they are independent_
+
+To create a real time dashboard we are going to use Amazon Managed Grafana. If you don't have a Grafana workspace yet, you need to create one following the instructions at https://docs.aws.amazon.com/grafana/latest/userguide/getting-started-with-AMG.html. When setting the workspace, make sure you choose Amazon TimeStream as a Data Source. If you are using an existing workspace, you can navigate to the workspace details using the AWS console and click on `Data Sources` to add TimeStream as one source.
+
+From the AWS console, navigate to your workspace and click on the Grafana workspace URL. You will need to log in using the user credentials, as per the configuration of your workspace.
+
+Once inside Grafana, we need to do a one-time setup to configure our data sources. We will create a data source for each of our two TimeStream tables. To do this, you click on the AWS icon at the left menu, then on `Data Sources`. Select `Timestream` from the _Service_ dropdown, then the region where you created the TimeStream database and click on the `Add data source` button. A new data source will appear on screen,
+
+For the data source type we will select Amazon TimeStream, and you need to click on the `Go to settings` button to configure the DB and table. The `Connection Details` screen will open, and on this screen you need to change four things:
+
+* At the top you see the Name, change it to `DS_TIMESERIES_RAW`
+* At the $_database dropdown select your Amazon TimeSeries db
+* For the $_table select the raw table
+* For the measure select `temperature`
+
+Click on `Save & Test`. You should see a message saying "Connection success".
+
+Go back to the AWS icon on the left hand menu, click on `Data Sources`, select the region and click on `Add Data Source`, then on `Go to settings`. We will configure the values for the second table:
+
+* Name: DS_TIMESERIES_CEP
+* Select your database
+* Select the CEP table
+* Select `avg_temperature` for the $_measure
+
+Click on `Save & Test`
+
+Now we are going to import a dashboard to get you going. Click the `Dashboards` icon on the left menu, and then select `Manage`. At the next screen click on `import`, and then `Upload JSON file`. You will find a .json file with the dashboard at the `grafana-dashboard` folder of this repository.
+
+You need to select the CEP and Raw data sources we created at the previous step from the dropdown and then click on `Import`. The real time dashboard will open. If you didn't stop the script sending random data to timestream, and if you didn't stop the notebook cell detecting the complex events at the Flink Studio notebook, you should see data on your dashboard.
+
+If you want to see the query powering each of the panels, you can just click on the panel name and select `edit`.
+
+
+#### 3.2 Integrating with your data lake
+
 We are now going to join the data processed by MWAA on the previous step with some (synthetic) data on our data lake. In the `data-lake` folder of this repository we have two subfolders with CSV files containing simulated customer master data and a mapping between sensors and customers. Since we were generating sensor data in our stream, we will now join the table to see how you could augment the time series data with the master data on your data lake.
 
 First you need to create a new bucket where we are going to store the synthetic customer data. DO NOT REUSE the same bucket we are using for the data lake.
@@ -403,4 +440,4 @@ And now we can directly query this view to have a consolidated view of our data 
 select * from sensor_enriched_data limit 10
 ```
 
-With this, if you wanted to create a business dashboard, you could just go to Amazon QuickSight, and create a dataset pointing to this Athena view.
+With this, if you wanted to create a business dashboard, you could just go to Amazon QuickSight, and create a dataset pointing to this Athena view. Since we already created a real-time dashboard, we are not providing step-by-step instructions, but please refer to Amazon Quicksight's documentation to connect to an Athena dataset https://docs.aws.amazon.com/quicksight/latest/user/create-a-data-set-athena.html
