@@ -149,7 +149,7 @@ You can repeat the other queries to complete the first part of this demo.
 
 We have a script that we have created that allows us to use some of the Timestream query capabilities, and then generate output using an open source project called AWS Data Wrangler. This project makes is easy to work with data services on AWS.
 
-The script is in the mwaa folder, and called airflow-query.py.
+The script is in the mwaa/datawrangler folder, and called airflow-query.py.
 
 We need to modify this script and update it with our Timestream database and table, review and adjust if needed the other info in the script (you can keep these default if you do not want to change) and we can run it by
 
