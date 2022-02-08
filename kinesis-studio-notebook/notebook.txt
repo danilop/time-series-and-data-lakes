@@ -16,17 +16,16 @@ WITH (
     'json.timestamp-format.standard' = 'ISO-8601'
 );
 
-
 %flink.ssql
 CREATE TABLE cep_data (
     `sensor_id` VARCHAR(9),
     `event_time` BIGINT,
-    `non_errors` BIGINT,
-    `history` VARCHAR(40),
+    `non_errors` BIGINT NOT NULL,
+    `history` STRING,
     `min_temperature` DOUBLE,
     `avg_temperature` DOUBLE,
     `max_temperature` DOUBLE,
-    `elapsed` INTEGER
+    `elapsed` BIGINT
 )
 PARTITIONED BY (sensor_id)
 WITH (
@@ -59,11 +58,14 @@ MATCH_RECOGNIZE (
         MIN(temperature) as min_temperature,
         ROUND(AVG(temperature),2) as avg_temperature,
         MAX(temperature) as max_temperature,
-        ROUND((C.event_time - A.event_time) / 1000) as elapsed
+        CAST(ROUND((C.event_time - A.event_time) / 1000) AS BIGINT) as elapsed
     AFTER MATCH SKIP PAST LAST ROW
-    PATTERN (A B{1,5} C) WITHIN INTERVAL '10' MINUTES
+    PATTERN (A B{1,5} C) WITHIN INTERVAL '1' MINUTES
     DEFINE
         A AS status = 'ERROR',
         B AS status <> 'ERROR', -- AND B.sensor_id = A.sensor_id,
         C AS status = 'ERROR' -- AND C.sensor_id = A.sensor_id
 ) AS T
+
+%flink.ssql(type=update)
+SELECT * FROM cep_data;
