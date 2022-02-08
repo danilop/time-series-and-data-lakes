@@ -6,3 +6,5 @@ aws-cdk.aws-lambda==1.134.0
 aws-cdk.aws-lambda-event-sources==1.134.0
 aws-cdk.aws_s3==1.134.0
 aws-cdk.aws_timestream==1.134.0
+aws-cdk.aws-s3-deployment==1.143.0
+aws-cdk.aws-mwaa==1.143.0
