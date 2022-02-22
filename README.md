@@ -20,6 +20,12 @@ cd cdk
 pip install -r requirements.txt
 ```
 
+This walkthrough also uses some other tools, such as jq which you can install via your preferred mechanism. If you are using AWS Cloud9, use the following:
+
+```
+sudo yum install jq
+```
+
 **Step 2**
 
 You can now deploy the CDK stack by running the following command:
@@ -147,11 +153,15 @@ You can repeat the other queries to complete the first part of this demo.
 
 **Step 6**
 
-We have a script that we have created that allows us to use some of the Timestream query capabilities, and then generate output using an open source project called AWS Data Wrangler. This project makes is easy to work with data services on AWS.
+We have a script that we have created that allows us to use some of the Timestream query capabilities, and then generate output using an open source project called AWS Data Wrangler. This project makes is easy to work with data services on AWS. First we need to install this library:
+
+```
+pip install awswrangler
+```
 
 The script is in the mwaa/datawrangler folder, and called airflow-query.py.
 
-We need to modify this script and update it with our Timestream database and table, review and adjust if needed the other info in the script (you can keep these default if you do not want to change) and we can run it by
+We need to modify this script and update it with our Timestream database and table. In Step 5 the output of the CDK script provided the values for the Timestream database and table, so use those.
 
 ```
 python airflow-query.py
@@ -190,6 +200,22 @@ We are going to use Apache Airflow to orchestrate the running of this script, so
 
 We will deploy Apache Airflow using CDK. You will be creating a new VPC, so make sure you have capacity within the region you are deploying before proceeding (by default, the soft limit is 5 VPCs per region)
 
+Before proceeding, you will need to update the values in the app.py before you can deploy MWAA using AWS CDK. The app.py file which contains some parameters that control how the Apache Airflow will be created. You will need to alter the following lines:
+
+```
+env_EU=core.Environment(region="eu-west-1", account="xxxxxxx")
+mwaa_props = {
+    'dagss3location': 'airflow-timestream-datalake-demo',
+    'mwaa_env' : 'airflow-timestream-datalake',
+    'mwaa_secrets' : 'airflow/variables',
+    'mwaa_ts_iam_arn' : 'arn:aws:iam::704533066374:policy/time-series-and-data-lakes-MWAAPolicyCBFB7F6C-1M1XY2GN81694',
+    'datalake_bucket' : 'time-series-and-data-lakes-datalake9060eab7-1qga4qb5ly9vn'
+    }
+```
+
+Update this to reflect your own AWS account as well as the output from the Timestream CDK deployment (which created the mwaa_ts_iam_arn and datalake_bucket values). You should change the dagss3location to be a unique S3 bucket - the CDK deployment will fail if you do not change this as this has already been created when this demo was put together.
+
+Once you have updated and saved, you can create the MWAA Stack. First of all, we will create the VPC.
 
 ```
 cd mwaa/mwaa-cdk
@@ -209,21 +235,6 @@ timestream-MWAA-vpc.VPCId = vpc-082e01fa3d88544df
 Stack ARN:
 arn:aws:cloudformation:eu-west-1:704533066374:stack/timestream-MWAA-vpc/f9901a50-365a-11ec-808e-06236a8fff2f
 ```
-
-You will now need to edit the app.py file which contains some parameters that control how the Apache Airflow will be created. You will need to alter the following lines:
-
-```
-env_EU=core.Environment(region="eu-west-1", account="xxxxxxx")
-mwaa_props = {
-    'dagss3location': 'airflow-timestream-datalake-demo',
-    'mwaa_env' : 'airflow-timestream-datalake',
-    'mwaa_secrets' : 'airflow/variables',
-    'mwaa_ts_iam_arn' : 'arn:aws:iam::704533066374:policy/time-series-and-data-lakes-MWAAPolicyCBFB7F6C-1M1XY2GN81694',
-    'datalake_bucket' : 'time-series-and-data-lakes-datalake9060eab7-1qga4qb5ly9vn'
-    }
-```
-
-Update this to reflect your own AWS account as well as the output from the Timestream CDK deployment (which created the mwaa_ts_iam_arn and datalake_bucket values). You should change the dagss3location to be a unique S3 bucket - the CDK deployment will fail if you do not change this as this has already been created when this demo was put together.
 
 You can now deploy the MWAA environment using the following command:
 
@@ -287,8 +298,6 @@ Unpause the DAG called "timestream-airflow-glue-adhoc.py" and then run this manu
 If you go to the AWS Glue console, you will now see that there is a new database that has been created.
 
 Unpause the DAG called "timestream-airflow-glue.py" and this will kick off the crawler again (every 5 mins) post update. When you look at the AWS Glue console, you will now see the tables.
-
-<Add Partition updates here>
 
 If we now go to the Amazon Athena console, we can see that we see our Timestream data available within our data lake.
 
